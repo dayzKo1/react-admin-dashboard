@@ -27,10 +27,13 @@ const getMenuItems = (routes: AdminRouterItem[]): any[] => {
  * @param props {autoCollapse?: boolean} automatic collapes menu when click another menu
  * @returns 
  */
-const PageSidebar = (props: {
+type PageSidebarProps = {
   autoCollapse?: boolean
-}) => {
-  const { autoCollapse = true } = props
+  height?: string | number
+}
+
+const PageSidebar = (props: PageSidebarProps) => {
+  const { autoCollapse = true, height = '100%' } = props
   const menuItems = getMenuItems(routes)
   const navigate = useNavigate()
   const [selectedKeys, setSelectedKeys] = useState<string[]>([])
@@ -52,7 +55,7 @@ const PageSidebar = (props: {
   }, [location.pathname])
 
   return (
-    <Sider theme='light'>
+    <Sider theme='light' style={{ height, overflow: 'auto' }}>
       <Menu openKeys={lastOpenedMenu} onOpenChange={onOpenChange} selectedKeys={selectedKeys} mode="inline" items={menuItems} onClick={onSwitchMenu} />
     </Sider>
   )

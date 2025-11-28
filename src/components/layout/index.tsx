@@ -13,16 +13,20 @@ const PageLayout: React.FC = () => {
     token: { colorBgContainer },
   } = theme.useToken();
 
+  const headerHeight = 64
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <PageSidebar />
+      <Headerbar colorBgContainer={colorBgContainer} />
       <Layout>
-        <Headerbar colorBgContainer={colorBgContainer} />
-        <PageBreadcrumb />
-        <PageContent></PageContent>
-        <Footer style={{ textAlign: 'center' }}>
-          React Admin Dashboard ©{new Date().getFullYear()} Created by Yujian Xue
-        </Footer>
+        <PageSidebar height={`calc(100vh - ${headerHeight}px)`} />
+        <Layout>
+          <PageBreadcrumb />
+          <PageContent></PageContent>
+          <Footer style={{ textAlign: 'center' }}>
+            React Admin Dashboard ©{new Date().getFullYear()} Created by Yujian Xue
+          </Footer>
+        </Layout>
       </Layout>
     </Layout>
   );
