@@ -4,13 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "tsc -b && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
     "@ant-design/charts": "^2.2.3",
+    "@ant-design/icons": "^6.1.0",
     "antd": "^5.18.3",
     "lodash-es": "^4.17.21",
     "react": "^18.3.1",
