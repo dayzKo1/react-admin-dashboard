@@ -21,6 +21,7 @@
 ### SaaS Demo Modules
 - **Dashboard** – KPI cards, revenue trend chart, customer source breakdown, and automated health insights
 - **Customers** – Advanced filtering, ownership, status transitions, detail drawer, and activity timeline
+- **Team Roles** – Nested role listing, detailed role insights, and permission matrix editor
 
 ---
 

@@ -130,13 +130,14 @@ const PageSidebar = (props: PageSidebarProps) => {
       trigger={null}
     >
       <Menu 
-        openKeys={collapsed ? [] : lastOpenedMenu} 
-        onOpenChange={onOpenChange} 
+        openKeys={collapsed ? undefined : lastOpenedMenu} 
+        onOpenChange={collapsed ? undefined : onOpenChange} 
         selectedKeys={selectedKeys} 
         mode="inline" 
         items={menuItems} 
         onClick={onSwitchMenu}
         inlineCollapsed={collapsed}
+        triggerSubMenuAction={collapsed ? 'hover' : 'click'}
       />
     </Sider>
   )

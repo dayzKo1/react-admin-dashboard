@@ -74,11 +74,6 @@ export const routes: AdminRouterItem[] = [
   {
     path: '*',
     element: <Navigate to="/dashboard" replace />,
-    meta: {
-      key: '/fallback',
-      hideInMenu: true,
-      title: 'Redirect',
-    },
   },
 ]
 

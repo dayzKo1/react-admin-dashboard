@@ -1,4 +1,5 @@
 import { Customer, CustomerActivity, CustomerFormValues, CustomerSource, CustomerStatus } from '../views/customers/types'
+import type { Role, RoleDetail, Permission } from '../views/team/types'
 
 const sleep = (delay = 320) => new Promise(resolve => setTimeout(resolve, delay))
 
@@ -89,6 +90,73 @@ let activities: CustomerActivity[] = [
     statusAfter: CustomerStatus.Active,
   },
 ]
+
+const roleSeeds: RoleDetail[] = [
+  {
+    id: 'ROL-1',
+    name: 'Workspace Admin',
+    description: 'Full access to billing, members, and security settings.',
+    status: 'active',
+    memberCount: 4,
+    permissionCount: 18,
+    updatedAt: '2024-11-24T10:00:00Z',
+    owner: 'Jamie Lee',
+    members: [
+      { id: 'U-1', name: 'Jamie Lee', title: 'Head of Ops' },
+      { id: 'U-2', name: 'Marco Díaz', title: 'Finance Lead' },
+    ],
+    permissions: [
+      { id: 'perm-1', name: 'Manage Billing', category: 'Billing', description: 'Access invoices, payment settings, and coupons.', enabled: true },
+      { id: 'perm-2', name: 'Invite Members', category: 'Members', description: 'Invite or remove workspace members.', enabled: true },
+      { id: 'perm-3', name: 'Edit Roles', category: 'Access Control', description: 'Create or update custom roles.', enabled: true },
+    ],
+    auditLog: [
+      { id: 'audit-1', actor: 'Jamie Lee', action: 'Updated permissions', timestamp: '2024-11-20T09:00:00Z' },
+      { id: 'audit-2', actor: 'Marco Díaz', action: 'Removed member limit', timestamp: '2024-11-10T12:30:00Z' },
+    ],
+  },
+  {
+    id: 'ROL-2',
+    name: 'Sales Manager',
+    description: 'Manage pipeline, quotas, and team assignments.',
+    status: 'active',
+    memberCount: 8,
+    permissionCount: 11,
+    updatedAt: '2024-11-21T15:40:00Z',
+    owner: 'Iris Chen',
+    members: [
+      { id: 'U-3', name: 'Iris Chen', title: 'Revenue Director' },
+      { id: 'U-4', name: 'Alex Morgan', title: 'Regional Lead' },
+    ],
+    permissions: [
+      { id: 'perm-4', name: 'View Revenue Dashboard', category: 'Analytics', description: 'Access team KPIs and forecasts.', enabled: true },
+      { id: 'perm-5', name: 'Assign Leads', category: 'CRM', description: 'Assign or reassign leads.', enabled: true },
+      { id: 'perm-6', name: 'Export Deals', category: 'CRM', description: 'Export pipeline data.', enabled: false },
+    ],
+    auditLog: [
+      { id: 'audit-3', actor: 'Iris Chen', action: 'Granted export access to Alex Morgan', timestamp: '2024-11-05T08:20:00Z' },
+    ],
+  },
+  {
+    id: 'ROL-3',
+    name: 'Support Agent',
+    description: 'Limited access to ticketing and customer profiles.',
+    status: 'pending',
+    memberCount: 25,
+    permissionCount: 6,
+    updatedAt: '2024-11-18T07:15:00Z',
+    owner: 'Nina Patel',
+    members: [],
+    permissions: [
+      { id: 'perm-7', name: 'View Tickets', category: 'Support', description: 'Access assigned and team tickets.', enabled: true },
+      { id: 'perm-8', name: 'Reply to Tickets', category: 'Support', description: 'Reply using shared inbox.', enabled: true },
+      { id: 'perm-9', name: 'View Billing Data', category: 'Billing', description: 'Read-only access to invoices.', enabled: false },
+    ],
+    auditLog: [],
+  },
+]
+
+let roles = [...roleSeeds]
 
 export interface DashboardStats {
   totalCustomers: number
@@ -209,5 +277,37 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 export const getCustomerActivities = async (customerId: string): Promise<CustomerActivity[]> => {
   await sleep()
   return activities.filter(activity => activity.customerId === customerId)
+}
+
+export const getRoles = async (): Promise<Role[]> => {
+  await sleep()
+  return roles.map(role => ({
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    status: role.status,
+    memberCount: role.memberCount,
+    permissionCount: role.permissionCount,
+    updatedAt: role.updatedAt,
+    owner: role.owner,
+  }))
+}
+
+export const getRoleDetail = async (roleId: string): Promise<RoleDetail | undefined> => {
+  await sleep()
+  return roles.find(role => role.id === roleId)
+}
+
+export const updateRolePermissions = async (roleId: string, permissions: Permission[]): Promise<RoleDetail> => {
+  await sleep()
+  const role = roles.find(roleEntry => roleEntry.id === roleId)
+  if (!role) {
+    throw new Error('Role not found')
+  }
+  role.permissions = permissions
+  role.permissionCount = permissions.filter(permission => permission.enabled).length
+  role.updatedAt = new Date().toISOString()
+  roles = roles.map(roleEntry => (roleEntry.id === roleId ? role : roleEntry))
+  return role
 }
 
