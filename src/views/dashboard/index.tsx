@@ -135,7 +135,10 @@ const DashboardPage = () => {
                   grid: { line: { style: { stroke: token.colorSplit, lineDash: [4, 4] } } },
                 }}
                 tooltip={{
-                  formatter: datum => ({ name: 'Revenue', value: `¥${datum.revenue.toLocaleString()}` }),
+                  formatter: (datum: { revenue: number }) => ({
+                    name: 'Revenue',
+                    value: `¥${datum.revenue.toLocaleString()}`,
+                  }),
                 }}
                 {...chartThemeConfig}
               />

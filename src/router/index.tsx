@@ -83,5 +83,5 @@ const routerConfig: RouteObject[] = [{
   children: routes,
 }]
 
-const router = createBrowserRouter(routerConfig)
+const router: ReturnType<typeof createBrowserRouter> = createBrowserRouter(routerConfig)
 export default router
