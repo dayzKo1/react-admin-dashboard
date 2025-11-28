@@ -18,11 +18,25 @@ Ensure your Node.js version is 18+ or 20+ to support Vite v5.
 
 ## Installation
 
+### Method 1: Clone the repo
+
 ```sh
 git clone https://github.com/larry-xue/react-admin-dashboard
 cd react-admin-dashboard
 npm install
+```
 
+### Method 2: Using npx degit
+
+```sh
+npx degit larry-xue/react-admin-dashboard my-project
+cd my-project
+npm install
+```
+
+### Development
+
+```sh
 # Local development
 npm run dev
 
