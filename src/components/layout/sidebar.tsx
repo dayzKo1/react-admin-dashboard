@@ -5,6 +5,25 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 const { Sider } = Layout;
 
+// Custom hook for responsive breakpoints
+const useResponsive = () => {
+  const [isMobile, setIsMobile] = useState(false)
+  const [isTablet, setIsTablet] = useState(false)
+
+  useEffect(() => {
+    const checkSize = () => {
+      setIsMobile(window.innerWidth <= 768)
+      setIsTablet(window.innerWidth > 768 && window.innerWidth <= 1024)
+    }
+    
+    checkSize()
+    window.addEventListener('resize', checkSize)
+    return () => window.removeEventListener('resize', checkSize)
+  }, [])
+
+  return { isMobile, isTablet }
+}
+
 const getMenuItems = (routes: AdminRouterItem[]): any[] => {
   return routes.map(itm => {
     if (!itm.meta) return null
@@ -30,19 +49,47 @@ const getMenuItems = (routes: AdminRouterItem[]): any[] => {
 type PageSidebarProps = {
   autoCollapse?: boolean
   height?: string | number
+  collapsed?: boolean
+  onCollapse?: (collapsed: boolean) => void
 }
 
 const PageSidebar = (props: PageSidebarProps) => {
-  const { autoCollapse = true, height = '100%' } = props
+  const { autoCollapse = true, height = '100%', collapsed: externalCollapsed, onCollapse } = props
   const menuItems = getMenuItems(routes)
   const navigate = useNavigate()
   const [selectedKeys, setSelectedKeys] = useState<string[]>([])
   const [lastOpenedMenu, setLastOpenedMenu] = useState<string[]>([])
   const location = useLocation()
+  
+  // Responsive breakpoints
+  const { isMobile } = useResponsive()
+  
+  // Auto collapse on mobile
+  const [internalCollapsed, setInternalCollapsed] = useState(isMobile)
+  const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed
+  
+  useEffect(() => {
+    if (isMobile && !collapsed) {
+      onCollapse?.(true)
+      setInternalCollapsed(true)
+    }
+  }, [isMobile, onCollapse])
+  
+  const handleCollapse = (collapsed: boolean) => {
+    if (onCollapse) {
+      onCollapse(collapsed)
+    } else {
+      setInternalCollapsed(collapsed)
+    }
+  }
 
   const onSwitchMenu = ({ key, keyPath }: { key: string; keyPath: string[] }) => {
     if (autoCollapse && keyPath.slice(1)) setLastOpenedMenu(keyPath.slice(1))
     navigate(key)
+    // Auto collapse sidebar on mobile after navigation
+    if (isMobile && !collapsed) {
+      handleCollapse(true)
+    }
   }
 
   const onOpenChange = (openKeys: string[]) => {
@@ -55,8 +102,35 @@ const PageSidebar = (props: PageSidebarProps) => {
   }, [location.pathname])
 
   return (
-    <Sider theme='light' style={{ height, overflow: 'auto' }}>
-      <Menu openKeys={lastOpenedMenu} onOpenChange={onOpenChange} selectedKeys={selectedKeys} mode="inline" items={menuItems} onClick={onSwitchMenu} />
+    <Sider 
+      theme='light' 
+      style={{ 
+        height, 
+        overflow: 'auto',
+        position: 'fixed',
+        left: 0,
+        top: 64,
+        bottom: 0,
+        zIndex: 100,
+        ...(isMobile && collapsed ? { display: 'none' } : {}),
+      }}
+      collapsible
+      collapsed={collapsed}
+      onCollapse={handleCollapse}
+      breakpoint="lg"
+      collapsedWidth={isMobile ? 0 : 80}
+      width={200}
+      trigger={null}
+    >
+      <Menu 
+        openKeys={collapsed ? [] : lastOpenedMenu} 
+        onOpenChange={onOpenChange} 
+        selectedKeys={selectedKeys} 
+        mode="inline" 
+        items={menuItems} 
+        onClick={onSwitchMenu}
+        inlineCollapsed={collapsed}
+      />
     </Sider>
   )
 }
