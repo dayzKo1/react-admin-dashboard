@@ -8,6 +8,8 @@ const { Sider } = Layout;
 const getMenuItems = (routes: AdminRouterItem[]): any[] => {
   return routes.map(itm => {
     if (!itm.meta) return null
+    // Filter out routes that should be hidden in menu
+    if (itm.meta.hideInMenu) return null
     let children = null
     if (itm.children) children = getMenuItems(itm.children)
     return children ? {

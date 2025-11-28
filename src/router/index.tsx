@@ -4,16 +4,20 @@ import {
 } from "react-router-dom";
 import App from "../App";
 import { MenuItemType } from "antd/es/menu/interface";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
 
 
 export type AdminRouterItem = RouteObject & {
-  // set antd menu props in meta
-  meta?: MenuItemType
+  // Set antd menu props in meta
+  meta?: MenuItemType & {
+    hideInMenu?: boolean
+    requiresAuth?: boolean
+  }
   children?: AdminRouterItem[]
 }
 
 /**
- * auto load route from views/***\/*.router.ts
+ * Auto load route from views/***\/*.router.ts
  * @returns route
  */
 const loadRouteModules = async () => {
@@ -36,12 +40,42 @@ const loadRouteModules = async () => {
   return routeModules
 }
 
+const routeModules = await loadRouteModules()
+
+// Separate auth routes and protected routes
+const authRoutes: AdminRouterItem[] = []
+const protectedRoutes: AdminRouterItem[] = []
+
+const wrapWithProtectedRoute = (route: AdminRouterItem): AdminRouterItem => {
+  const wrappedChildren = route.children?.map(child => wrapWithProtectedRoute(child)) as AdminRouterItem[] | undefined
+  
+  return {
+    ...route,
+    element: route.element ? <ProtectedRoute>{route.element}</ProtectedRoute> : route.element,
+    children: wrappedChildren,
+  } as AdminRouterItem
+}
+
+routeModules.forEach(route => {
+  // Auth routes (login, register) don't require authentication
+  if (route.path?.startsWith('auth/')) {
+    authRoutes.push(route)
+  } else {
+    // Wrap protected routes with ProtectedRoute
+    protectedRoutes.push(wrapWithProtectedRoute(route))
+  }
+})
+
 export const routes: AdminRouterItem[] = [
-  ...await loadRouteModules()
+  ...authRoutes,
+  ...protectedRoutes,
 ]
 
-export default createBrowserRouter([{
+const routerConfig: RouteObject[] = [{
   path: "/",
   element: <App />,
   children: routes,
-}])
+}]
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default createBrowserRouter(routerConfig) as any
