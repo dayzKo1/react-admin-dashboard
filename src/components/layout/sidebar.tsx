@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Layout, Menu } from 'antd';
+import type { MenuItemType } from 'antd/es/menu/interface';
 import { AdminRouterItem, routes } from '../../router';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -24,8 +25,14 @@ const useResponsive = () => {
   return { isMobile, isTablet }
 }
 
-const getMenuItems = (routes: AdminRouterItem[]): any[] => {
-  return routes.map(itm => {
+const getMenuItems = (routes: AdminRouterItem[]): MenuItemType[] => {
+  const sortedRoutes = [...routes].sort((a, b) => {
+    const orderA = a.meta?.order ?? 0
+    const orderB = b.meta?.order ?? 0
+    return orderA - orderB
+  })
+
+  return sortedRoutes.map(itm => {
     if (!itm.meta) return null
     // Filter out routes that should be hidden in menu
     if (itm.meta.hideInMenu) return null
@@ -73,7 +80,7 @@ const PageSidebar = (props: PageSidebarProps) => {
       onCollapse?.(true)
       setInternalCollapsed(true)
     }
-  }, [isMobile, onCollapse])
+  }, [isMobile, collapsed, onCollapse])
   
   const handleCollapse = (collapsed: boolean) => {
     if (onCollapse) {
@@ -99,7 +106,7 @@ const PageSidebar = (props: PageSidebarProps) => {
   useEffect(() => {
     setSelectedKeys([`${location.pathname}`])
     navigate(location.pathname)
-  }, [location.pathname])
+  }, [location.pathname, navigate])
 
   return (
     <Sider 

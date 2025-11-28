@@ -92,10 +92,13 @@ const LoginPage: React.FC = () => {
       message.success('Login successful!')
       
       // Redirect to home page or previously visited page
-      const redirect = new URLSearchParams(window.location.search).get('redirect') || '/demo/table'
+      const redirect = new URLSearchParams(window.location.search).get('redirect') || '/dashboard'
       navigate(redirect)
-    } catch (error: any) {
-      message.error(error.message || 'Login failed, please check your username and password')
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'message' in error 
+        ? String(error.message) 
+        : 'Login failed, please check your username and password'
+      message.error(errorMessage)
     } finally {
       setLoading(false)
     }

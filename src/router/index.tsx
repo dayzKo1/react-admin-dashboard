@@ -1,4 +1,5 @@
 import {
+  Navigate,
   RouteObject,
   createBrowserRouter,
 } from "react-router-dom";
@@ -12,6 +13,7 @@ export type AdminRouterItem = RouteObject & {
   meta?: MenuItemType & {
     hideInMenu?: boolean
     requiresAuth?: boolean
+    order?: number
   }
   children?: AdminRouterItem[]
 }
@@ -69,6 +71,15 @@ routeModules.forEach(route => {
 export const routes: AdminRouterItem[] = [
   ...authRoutes,
   ...protectedRoutes,
+  {
+    path: '*',
+    element: <Navigate to="/dashboard" replace />,
+    meta: {
+      key: '/fallback',
+      hideInMenu: true,
+      title: 'Redirect',
+    },
+  },
 ]
 
 const routerConfig: RouteObject[] = [{
@@ -77,5 +88,5 @@ const routerConfig: RouteObject[] = [{
   children: routes,
 }]
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default createBrowserRouter(routerConfig) as any
+const router = createBrowserRouter(routerConfig)
+export default router

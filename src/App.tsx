@@ -15,7 +15,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (location.pathname === '/') {
       if (isAuthenticated) {
-        navigate('/demo/table', { replace: true })
+        navigate('/dashboard', { replace: true })
       } else {
         navigate('/auth/login', { replace: true })
       }

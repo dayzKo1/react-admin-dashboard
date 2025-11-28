@@ -67,23 +67,23 @@ api.interceptors.response.use(
 
 // Request methods wrapper
 export const request = {
-  get: <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+  get: <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     return api.get(url, config)
   },
-  post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+  post: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
     // Use mock for login in development mode
-    if (isMockMode() && url === '/auth/login' && data?.username && data?.password) {
-      return mockLogin(data.username, data.password) as Promise<T>
+    if (isMockMode() && url === '/auth/login' && data && typeof data === 'object' && 'username' in data && 'password' in data) {
+      return mockLogin(String(data.username), String(data.password)) as Promise<T>
     }
     return api.post(url, data, config) as Promise<T>
   },
-  put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+  put: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
     return api.put(url, data, config)
   },
-  delete: <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+  delete: <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     return api.delete(url, config)
   },
-  patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+  patch: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
     return api.patch(url, data, config)
   },
 }

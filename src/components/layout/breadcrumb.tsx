@@ -1,27 +1,23 @@
-import { Breadcrumb } from 'antd';
-import { BreadcrumbItemType } from 'antd/es/breadcrumb/Breadcrumb';
-import { useEffect, useState } from 'react';
-import { useMatches } from 'react-router-dom';
-import { AdminRouterItem, routes } from '../../router';
-import { assign } from 'lodash-es';
+import { Breadcrumb } from 'antd'
+import type { BreadcrumbItemType } from 'antd/es/breadcrumb/Breadcrumb'
+import { useEffect, useMemo, useState } from 'react'
+import { useMatches } from 'react-router-dom'
+import type { AdminRouterItem } from '../../router'
+import { routes } from '../../router'
+import { assign } from 'lodash-es'
 
-const flattenRoutes = (routes: AdminRouterItem[], prefix = '/') => {
-  let map: {
-    [key: string]: {
-      path: string
-      title: string
-    }
-  } = {}
+const flattenRoutes = (routeList: AdminRouterItem[], prefix = '/') => {
+  let map: Record<string, { path: string; title: string }> = {}
 
-  routes.map(itm => {
-    if (!itm.meta?.title || !itm.path) return null
+  routeList.forEach(itm => {
+    if (!itm.meta?.title || !itm.path) return
     map[prefix + itm.path] = {
       path: prefix + itm.path,
-      title: itm.meta.title
+      title: itm.meta.title,
     }
 
     if (itm.children) {
-      map = assign({}, map, flattenRoutes(itm.children, prefix + itm.path + '/'))
+      map = assign({}, map, flattenRoutes(itm.children, `${prefix}${itm.path}/`))
     }
   })
 
@@ -29,20 +25,19 @@ const flattenRoutes = (routes: AdminRouterItem[], prefix = '/') => {
 }
 
 const PageBreadcrumb: React.FC = () => {
-  const flattendRoutes = flattenRoutes(routes)
-  const matches = useMatches();
+  const matches = useMatches()
+  const flattenedRoutes = useMemo(() => flattenRoutes(routes), [])
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItemType[]>([])
 
   useEffect(() => {
-    setBreadcrumbs(matches.map((match) => {
-      return {
-        title: flattendRoutes[match.pathname]?.title
-      }
-    }))
-  }, [matches])
+    setBreadcrumbs(
+      matches.map(match => ({
+        title: flattenedRoutes[match.pathname]?.title ?? match.pathname,
+      })),
+    )
+  }, [matches, flattenedRoutes])
 
-
-  return <Breadcrumb style={{ margin: '16px 20px' }} items={breadcrumbs} />;
-};
+  return <Breadcrumb style={{ margin: '16px 20px' }} items={breadcrumbs} />
+}
 
 export default PageBreadcrumb

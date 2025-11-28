@@ -73,8 +73,11 @@ const RegisterPage: React.FC = () => {
       
       // Redirect to login page
       navigate('/auth/login')
-    } catch (error: any) {
-      message.error(error.message || 'Registration failed, please try again')
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'message' in error 
+        ? String(error.message) 
+        : 'Registration failed, please try again'
+      message.error(errorMessage)
     } finally {
       setLoading(false)
     }
