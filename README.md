@@ -47,6 +47,9 @@ src/
 ├── components/
 │   ├── layout/          # Shell layout: header, sidebar, breadcrumbs, content
 │   └── auth/            # Shared auth UI pieces
+├── config/
+│   ├── theme.ts         # Theme configuration types and utilities
+│   └── theme-presets.ts # Preset theme definitions
 ├── views/
 │   ├── auth/            # Login & register pages (unprotected)
 │   ├── dashboard/       # SaaS dashboard page + routes
@@ -100,7 +103,9 @@ Visit `http://localhost:5173`.
 ### Theming
 - Light / Dark / Compact algorithms controlled via Zustand store
 - Persistent theme preferences using localStorage
-- Runtime color editing (e.g., primary color) via store
+- **Preset themes**: Blue, Green, Purple, Orange, Teal, Red, Cyan
+- **Custom colors**: Support for primary, secondary, success, warning, error, info, background, and text colors
+- Runtime theme switching and color customization via store
 
 ### Layout & Responsiveness
 - Sticky header, collapsible sidebar, breadcrumb trail, and flexible content area
@@ -140,13 +145,34 @@ export default exampleRoutes
 ```
 
 ### Adjust Theme Defaults
-Modify `src/store/config.ts`:
+
+#### Option 1: Use Preset Themes
 ```ts
-themeConfig: {
-  _algorithm: ['default'],      // add 'dark' or 'compact'
-  algorithm: [theme.defaultAlgorithm],
-  primaryColor: '#03dac6',      // set your brand color
-}
+import useConfigStore from './store/config'
+
+// Switch to a preset theme
+const setTheme = useConfigStore(state => state.setTheme)
+setTheme('blue')  // or 'green', 'purple', 'orange', 'teal', 'red', 'cyan'
+```
+
+#### Option 2: Customize Individual Colors
+```ts
+import useConfigStore from './store/config'
+
+// Customize a specific color
+const setCustomColor = useConfigStore(state => state.setCustomColor)
+setCustomColor('primary', '#1890ff')
+setCustomColor('success', '#52c41a')
+// Available color keys: primary, secondary, success, warning, error, info, background, text
+```
+
+#### Option 3: Modify Default Theme in Code
+Modify `src/config/theme-presets.ts` to change preset theme colors, or modify `src/store/config.ts` to change the default theme:
+```ts
+// In src/store/config.ts
+const defaultThemeConfig = createDefaultThemeConfig()
+defaultThemeConfig.colors.primary = '#your-color'
+defaultThemeConfig.colors.secondary = '#your-secondary-color'
 ```
 
 ### API / Mock Settings

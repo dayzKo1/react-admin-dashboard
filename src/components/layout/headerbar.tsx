@@ -1,10 +1,11 @@
-import { Layout, Switch, Dropdown, Avatar, Button } from 'antd';
-import { GithubOutlined, LogoutOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { Layout, Switch, Dropdown, Avatar, Button, Tooltip } from 'antd';
+import { GithubOutlined, LogoutOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined, BgColorsOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import useConfigStore from '../../store/config';
 import useUserStore from '../../store/user';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import ThemeConfigDialog from './ThemeConfigDialog';
 const { Header } = Layout;
 
 // Custom hook for responsive breakpoints
@@ -40,6 +41,7 @@ const Headerbar = (props: HeaderbarProps) => {
   const user = useUserStore(state => state.user)
   const logout = useUserStore(state => state.logout)
   const navigate = useNavigate()
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false)
 
   // Responsive breakpoints
   const { isMobile, isTablet } = useResponsive()
@@ -133,6 +135,14 @@ const Headerbar = (props: HeaderbarProps) => {
                 onChange={(checked) => setCompactAlgorithm(checked ? 'compact' : '')} 
                 size={isTablet ? 'small' : 'default'}
               />
+              <Tooltip title="Theme Configuration">
+                <Button
+                  type="text"
+                  icon={<BgColorsOutlined />}
+                  onClick={() => setThemeDialogOpen(true)}
+                  size={isTablet ? 'small' : 'middle'}
+                />
+              </Tooltip>
             </>
           )}
           {user && (
@@ -168,6 +178,10 @@ const Headerbar = (props: HeaderbarProps) => {
           />
         </div>
       </div>
+      <ThemeConfigDialog
+        open={themeDialogOpen}
+        onClose={() => setThemeDialogOpen(false)}
+      />
     </Header>
   )
 }

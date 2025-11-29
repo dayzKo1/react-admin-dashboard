@@ -74,16 +74,18 @@ const PageSidebar = (props: PageSidebarProps) => {
   // Auto collapse on mobile
   const [internalCollapsed, setInternalCollapsed] = useState(isMobile)
   const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed
-  const prevIsMobileRef = useRef(isMobile)
+  const prevIsMobileRef = useRef<boolean | null>(null)
   
   // Only auto collapse when switching from desktop to mobile, not when user manually opens sidebar
   useEffect(() => {
     const prevIsMobile = prevIsMobileRef.current
-    if (!prevIsMobile && isMobile && !collapsed) {
+    // Only check transition if we have a previous value (skip first render)
+    if (prevIsMobile !== null && !prevIsMobile && isMobile && !collapsed) {
       // Switching from desktop to mobile, auto collapse
       onCollapse?.(true)
       setInternalCollapsed(true)
     }
+    // Update ref after checking, so next render has the previous value
     prevIsMobileRef.current = isMobile
   }, [isMobile, collapsed, onCollapse])
   
