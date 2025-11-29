@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Layout, Menu } from 'antd';
 import type { MenuItemType } from 'antd/es/menu/interface';
 import { AdminRouterItem, routes } from '../../router';
@@ -74,12 +74,17 @@ const PageSidebar = (props: PageSidebarProps) => {
   // Auto collapse on mobile
   const [internalCollapsed, setInternalCollapsed] = useState(isMobile)
   const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed
+  const prevIsMobileRef = useRef(isMobile)
   
+  // Only auto collapse when switching from desktop to mobile, not when user manually opens sidebar
   useEffect(() => {
-    if (isMobile && !collapsed) {
+    const prevIsMobile = prevIsMobileRef.current
+    if (!prevIsMobile && isMobile && !collapsed) {
+      // Switching from desktop to mobile, auto collapse
       onCollapse?.(true)
       setInternalCollapsed(true)
     }
+    prevIsMobileRef.current = isMobile
   }, [isMobile, collapsed, onCollapse])
   
   const handleCollapse = (collapsed: boolean) => {
