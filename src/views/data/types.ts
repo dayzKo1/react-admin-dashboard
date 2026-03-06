@@ -49,6 +49,7 @@ export interface Concert {
   title: string
   places: string
   content: ConcertContent[]
+  songTimestamps?: Record<string, string>
 }
 
 export interface ConcertContent {

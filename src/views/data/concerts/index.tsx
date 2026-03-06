@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button, Card, Form, Input, message, Modal, Space, Table, Typography, Tabs, Row, Col, Select } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { PlusOutlined, EditOutlined, DeleteOutlined, MinusCircleOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, MinusCircleOutlined, CopyOutlined } from '@ant-design/icons'
 import type { Concert } from '../types'
 import { getConcerts, saveConcerts, deleteConcert } from './api'
 
@@ -13,6 +13,8 @@ const ConcertsPage = () => {
   const [concerts, setConcerts] = useState<Concert[]>([])
   const [modalVisible, setModalVisible] = useState(false)
   const [editingConcert, setEditingConcert] = useState<Concert | null>(null)
+  const [pasteModalVisible, setPasteModalVisible] = useState(false)
+  const [pasteText, setPasteText] = useState('')
   const [form] = Form.useForm()
 
   const loadConcerts = async () => {
@@ -34,7 +36,18 @@ const ConcertsPage = () => {
 
   const handleEdit = (record: Concert) => {
     setEditingConcert(record)
-    form.setFieldsValue(record)
+    
+    const formData = {
+      ...record,
+      songTimestamps: record.songTimestamps 
+        ? Object.entries(record.songTimestamps).map(([songName, timestamp]) => ({
+            songName,
+            timestamp
+          }))
+        : []
+    }
+    
+    form.setFieldsValue(formData)
     setModalVisible(true)
   }
 
@@ -67,17 +80,76 @@ const ConcertsPage = () => {
     })
   }
 
+  const handlePasteConvert = () => {
+    setPasteModalVisible(true)
+    setPasteText('')
+  }
+
+  const handlePasteSubmit = () => {
+    try {
+      const parsedTimestamps = parseTimestampsFromText(pasteText)
+      if (parsedTimestamps.length === 0) {
+        message.warning('No valid timestamps found in the pasted text')
+        return
+      }
+
+      const currentTimestamps = form.getFieldValue('songTimestamps') || []
+      const newTimestamps = [...currentTimestamps, ...parsedTimestamps]
+      form.setFieldsValue({ songTimestamps: newTimestamps })
+
+      message.success(`Successfully imported ${parsedTimestamps.length} timestamps`)
+      setPasteModalVisible(false)
+      setPasteText('')
+    } catch (error) {
+      console.error('Error parsing timestamps:', error)
+      message.error('Failed to parse timestamps. Please check the format.')
+    }
+  }
+
+  const parseTimestampsFromText = (text: string): Array<{ songName: string; timestamp: string }> => {
+    const result: Array<{ songName: string; timestamp: string }> = []
+
+    const lines = text.split('\n')
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim()
+      if (!trimmedLine) continue
+
+      const match = trimmedLine.match(/^['"]?(.+?)['"]?\s*:\s*['"]?([0-9]+:[0-9]+(?::[0-9]+)?)['"]?,?\s*$/)
+      if (match) {
+        const songName = match[1].trim()
+        const timestamp = match[2].trim()
+        result.push({ songName, timestamp })
+      }
+    }
+
+    return result
+  }
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
+      
+      const songTimestampsMap = values.songTimestamps?.reduce((acc: Record<string, string>, item: { songName: string; timestamp: string }) => {
+        if (item.songName && item.timestamp) {
+          acc[item.songName] = item.timestamp
+        }
+        return acc
+      }, {}) || {}
+      
+      const concertData = {
+        ...values,
+        songTimestamps: songTimestampsMap
+      }
+      
       if (editingConcert) {
-        const updatedConcerts = concerts.map(c => (c.id === editingConcert.id ? { ...c, ...values } : c))
+        const updatedConcerts = concerts.map(c => (c.id === editingConcert.id ? { ...c, ...concertData } : c))
         await saveConcerts(updatedConcerts)
         setConcerts(updatedConcerts)
         message.success('Concert updated successfully')
       } else {
         const newConcert: Concert = {
-          ...values,
+          ...concertData,
           id: values.id || Date.now().toString(),
           content: values.content || []
         }
@@ -316,9 +388,92 @@ const ConcertsPage = () => {
                   </Form.List>
                 ),
               },
+              {
+                key: 'timestamps',
+                label: 'Song Timestamps',
+                children: (
+                  <Form.List name="songTimestamps">
+                    {(fields, { add, remove }) => (
+                      <>
+                        {fields.map(({ key, name, ...restField }) => (
+                          <Card key={key} size="small" style={{ marginBottom: 16 }}>
+                            <Row gutter={16}>
+                              <Col span={12}>
+                                <Form.Item
+                                  {...restField}
+                                  name={[name, 'songName']}
+                                  label="Song Name"
+                                  rules={[{ required: true, message: 'Please input song name' }]}
+                                >
+                                  <Input placeholder="Song Name" />
+                                </Form.Item>
+                              </Col>
+                              <Col span={12}>
+                                <Form.Item
+                                  {...restField}
+                                  name={[name, 'timestamp']}
+                                  label="Timestamp"
+                                  rules={[{ required: true, message: 'Please input timestamp (e.g., 0:03:08)' }]}
+                                >
+                                  <Input placeholder="Timestamp (e.g., 0:03:08)" />
+                                </Form.Item>
+                              </Col>
+                              <Col span={24}>
+                                <Button type="link" danger onClick={() => remove(name)}>
+                                  <MinusCircleOutlined /> Remove Timestamp
+                                </Button>
+                              </Col>
+                            </Row>
+                          </Card>
+                        ))}
+                        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                          Add Song Timestamp
+                        </Button>
+                        <Button 
+                          type="primary" 
+                          onClick={handlePasteConvert} 
+                          block 
+                          icon={<CopyOutlined />}
+                          style={{ marginTop: 8 }}
+                        >
+                          Paste & Convert from timeUtils.ts
+                        </Button>
+                      </>
+                    )}
+                  </Form.List>
+                ),
+              },
             ]}
           />
         </Form>
+
+        <Modal
+          title="Paste Timestamps from timeUtils.ts"
+          open={pasteModalVisible}
+          onOk={handlePasteSubmit}
+          onCancel={() => {
+            setPasteModalVisible(false)
+            setPasteText('')
+          }}
+          width={800}
+        >
+          <div style={{ marginBottom: 16 }}>
+            <p>Copy the timestamp mapping from timeUtils.ts and paste it below. Example format:</p>
+            <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4 }}>
+{`export const tianjinSongTimestamps: Record<string, string> = {
+  '打开（原创）': '0:01:51',
+  '没语季节（原创）': '0:09:18',
+  '我们的爱（翻唱）': '0:15:12',
+}`}
+            </pre>
+          </div>
+          <TextArea
+            rows={15}
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            placeholder="Paste the timestamp mapping here..."
+          />
+        </Modal>
       </Modal>
     </div>
   )
