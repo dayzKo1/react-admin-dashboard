@@ -79,9 +79,10 @@ const LoginPage: React.FC = () => {
 
   const handleWeiboLogin = () => {
     const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
-    const redirectUri = encodeURIComponent(window.location.origin + '/auth/weibo/callback')
-    const authUrl = `${backendUrl}/oauth2/authorization/weibo?redirect_uri=${redirectUri}`
-    window.location.href = authUrl
+    const redirectUri = window.location.origin + '/auth/weibo/callback'
+    const url = new URL(`${backendUrl}/oauth2/authorization/weibo`)
+    url.searchParams.set('redirect_uri', redirectUri)
+    window.location.href = url.toString()
   }
 
   const onFinish = async (values: LoginFormValues) => {
