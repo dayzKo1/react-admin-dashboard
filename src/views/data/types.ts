@@ -5,12 +5,19 @@ export interface Album {
   artist: string
   type: string
   releaseDate: string
+  physicalReleaseDate?: string
   label: string
   coverImage: string
   description: string
   tracks: Track[]
-  awards: string[]
+  awards: Award[]
   production: Production
+}
+
+export interface Award {
+  date: string
+  organization: string
+  award: string
 }
 
 export interface Track {
@@ -33,9 +40,11 @@ export interface Track {
 export interface Production {
   producers: string[]
   musicians: string[]
+  visualDesign?: string
 }
 
 export interface Concert {
+  id: string
   date: string
   title: string
   places: string
@@ -81,6 +90,7 @@ export interface Member {
 }
 
 export interface VarietyShow {
+  id: string
   date: string
   title: string
   description: string

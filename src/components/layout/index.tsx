@@ -62,7 +62,7 @@ const PageLayout: React.FC = () => {
           <PageBreadcrumb />
           <PageContent></PageContent>
           <Footer style={{ textAlign: 'center', padding: '16px' }}>
-            React Admin Dashboard ©{new Date().getFullYear()} Created by Yujian Xue
+            React Admin Dashboard ©{new Date().getFullYear()}
           </Footer>
         </Layout>
       </Layout>

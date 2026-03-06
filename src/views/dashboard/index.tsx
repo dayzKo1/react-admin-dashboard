@@ -1,233 +1,159 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Line, Pie } from '@ant-design/charts'
-import { ArrowUpOutlined, FireOutlined, TeamOutlined } from '@ant-design/icons'
-import { Card, Col, List, Row, Skeleton, Space, Statistic, Tag, Typography, theme } from 'antd'
-import useConfigStore from '../../store/config'
-import type { DashboardStats } from '../../utils/mockData'
-import { getDashboardStats } from '../../utils/mockData'
-import { CustomerStatus } from '../customers/types'
+import { Card, Col, Row, Statistic, Typography, theme, Empty } from 'antd'
+import { CustomerServiceOutlined, AudioOutlined, TeamOutlined, VideoCameraOutlined } from '@ant-design/icons'
+import { request } from '@/utils/api'
 
-const statusLabelMap: Record<CustomerStatus, string> = {
-  [CustomerStatus.Prospect]: 'Prospect',
-  [CustomerStatus.InProgress]: 'In Progress',
-  [CustomerStatus.Active]: 'Active',
-  [CustomerStatus.Churned]: 'Churned',
-}
-
-const statusColorMap: Record<CustomerStatus, string> = {
-  [CustomerStatus.Prospect]: 'default',
-  [CustomerStatus.InProgress]: 'processing',
-  [CustomerStatus.Active]: 'success',
-  [CustomerStatus.Churned]: 'error',
+interface DataCount {
+  albums: number
+  concerts: number
+  members: number
+  varietyShows: number
 }
 
 const DashboardPage = () => {
-  const [stats, setStats] = useState<DashboardStats>()
+  const [dataCount, setDataCount] = useState<DataCount>({
+    albums: 0,
+    concerts: 0,
+    members: 0,
+    varietyShows: 0,
+  })
   const [loading, setLoading] = useState(true)
   const { token } = theme.useToken()
-  const algorithms = useConfigStore(state => state.themeConfig._algorithm)
-  const isDarkMode = algorithms.includes('dark')
 
   useEffect(() => {
-    let mounted = true
-    const load = async () => {
+    const loadData = async () => {
       setLoading(true)
       try {
-        const nextStats = await getDashboardStats()
-        if (mounted) {
-          setStats(nextStats)
-        }
+        const [albumsRes, concertsRes, teamRes, varietyShowsRes] = await Promise.all([
+          request.get('/api/data/albums'),
+          request.get('/api/data/concerts'),
+          request.get('/api/data/team'),
+          request.get('/api/data/variety-shows'),
+        ])
+
+        setDataCount({
+          albums: albumsRes.data?.length || 0,
+          concerts: concertsRes.data?.length || 0,
+          members: teamRes.data?.members?.length || 0,
+          varietyShows: varietyShowsRes.data?.length || 0,
+        })
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error)
       } finally {
-        if (mounted) setLoading(false)
+        setLoading(false)
       }
     }
-    load()
-    const timer = setInterval(load, 1000 * 60 * 5)
-    return () => {
-      mounted = false
-      clearInterval(timer)
-    }
+
+    loadData()
   }, [])
 
   const metricCards = useMemo(() => ([
     {
-      title: 'Total Customers',
-      value: stats?.totalCustomers ?? 0,
-      suffix: 'customers',
-      icon: <TeamOutlined style={{ color: '#1890ff' }} />,
-      trend: '+12% MoM',
+      title: 'Albums',
+      value: dataCount.albums,
+      suffix: 'albums',
+      icon: <CustomerServiceOutlined style={{ color: '#1890ff', fontSize: 24 }} />,
+      color: '#1890ff',
     },
     {
-      title: 'New Customers (Monthly)',
-      value: stats?.newCustomers ?? 0,
-      suffix: 'customers',
-      icon: <ArrowUpOutlined style={{ color: '#52c41a' }} />,
-      trend: '+8% YoY',
+      title: 'Concerts',
+      value: dataCount.concerts,
+      suffix: 'concerts',
+      icon: <AudioOutlined style={{ color: '#52c41a', fontSize: 24 }} />,
+      color: '#52c41a',
     },
     {
-      title: 'MRR',
-      value: stats?.monthlyRecurringRevenue ?? 0,
-      prefix: '¥',
-      icon: <FireOutlined style={{ color: '#fa8c16' }} />,
-      trend: '+5.6% QoQ',
+      title: 'Team Members',
+      value: dataCount.members,
+      suffix: 'members',
+      icon: <TeamOutlined style={{ color: '#fa8c16', fontSize: 24 }} />,
+      color: '#fa8c16',
     },
     {
-      title: 'Active Deals',
-      value: stats?.activeDeals ?? 0,
-      suffix: 'deals',
-      icon: <ArrowUpOutlined style={{ color: '#722ed1' }} />,
-      trend: '72% win rate',
+      title: 'Variety Shows',
+      value: dataCount.varietyShows,
+      suffix: 'shows',
+      icon: <VideoCameraOutlined style={{ color: '#722ed1', fontSize: 24 }} />,
+      color: '#722ed1',
     },
-  ]), [stats])
+  ]), [dataCount])
 
   const metricCardStyle = {
     background: token.colorBgElevated,
     border: `1px solid ${token.colorBorderSecondary}`,
     borderRadius: token.borderRadiusLG,
-  }
-
-  const chartThemeConfig = isDarkMode ? { theme: 'classicDark' } : { theme: 'classic' }
-
-  if (loading && !stats) {
-    return <Skeleton active paragraph={{ rows: 12 }} />
+    height: '100%',
   }
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <div style={{ padding: 24 }}>
+      <Typography.Title level={2} style={{ marginBottom: 24 }}>
+        Dashboard
+      </Typography.Title>
+      
       <Row gutter={[16, 16]}>
         {metricCards.map(card => (
           <Col key={card.title} xs={24} sm={12} lg={6}>
-            <Card styles={{ body: { padding: 16 } }} style={metricCardStyle}>
-              <Space align="start">
-                {card.icon}
-                <Statistic
-                  title={card.title}
-                  value={card.value}
-                  prefix={card.prefix}
-                  suffix={card.suffix}
-                  valueStyle={{ color: token.colorText }}
-                />
-              </Space>
-              <Typography.Text style={{ color: token.colorTextSecondary }}>{card.trend}</Typography.Text>
+            <Card 
+              styles={{ body: { padding: 24 } }} 
+              style={metricCardStyle}
+              hoverable
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ 
+                  width: 56, 
+                  height: 56, 
+                  borderRadius: '50%', 
+                  backgroundColor: `${card.color}15`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {card.icon}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Statistic
+                    title={card.title}
+                    value={card.value}
+                    suffix={card.suffix}
+                    valueStyle={{ 
+                      color: token.colorText,
+                      fontSize: 28,
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+              </div>
             </Card>
           </Col>
         ))}
       </Row>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <Card title="Revenue Trend" extra={<Typography.Text type="secondary">Last 6 months</Typography.Text>}>
-            {stats ? (
-              <Line
-                data={stats.revenueTrend}
-                xField="month"
-                yField="revenue"
-                smooth
-                height={320}
-                point={{ sizeField: 5 }}
-                xAxis={{
-                  label: { style: { fill: token.colorTextSecondary } },
-                  line: { style: { stroke: token.colorBorderSecondary } },
-                  tickLine: { style: { stroke: token.colorBorderSecondary } },
-                }}
-                yAxis={{
-                  label: { style: { fill: token.colorTextSecondary } },
-                  grid: { line: { style: { stroke: token.colorSplit, lineDash: [4, 4] } } },
-                }}
-                tooltip={{
-                  formatter: (datum: { revenue: number }) => ({
-                    name: 'Revenue',
-                    value: `¥${datum.revenue.toLocaleString()}`,
-                  }),
-                }}
-                {...chartThemeConfig}
+      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+        <Col xs={24}>
+          <Card 
+            title="Welcome to 17b331 Admin"
+            style={metricCardStyle}
+          >
+            <div style={{ padding: 24, textAlign: 'center' }}>
+              <Empty
+                description={
+                  <div>
+                    <Typography.Paragraph style={{ fontSize: 16, marginBottom: 16 }}>
+                      Manage your data efficiently with the 17b331 Admin Dashboard
+                    </Typography.Paragraph>
+                    <Typography.Text type="secondary">
+                      Use the navigation menu to access Albums, Concerts, Team, and Variety Shows management
+                    </Typography.Text>
+                  </div>
+                }
               />
-            ) : (
-              <Skeleton active />
-            )}
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card title="Customer Sources">
-            {stats ? (
-              <Pie
-                data={stats.sourceDistribution}
-                angleField="value"
-                colorField="type"
-                innerRadius={0.5}
-                height={320}
-                legend={{
-                  position: 'bottom',
-                  itemName: { style: { fill: token.colorTextSecondary } },
-                }}
-                label={{
-                  text: 'value',
-                  style: { fontWeight: 600, fill: token.colorText },
-                }}
-                {...chartThemeConfig}
-              />
-            ) : (
-              <Skeleton active />
-            )}
+            </div>
           </Card>
         </Col>
       </Row>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
-          <Card title="Recent Activity">
-            <List
-              dataSource={stats?.recentActivities ?? []}
-              renderItem={activity => (
-                <List.Item>
-                  <List.Item.Meta
-                    title={
-                      <Space>
-                        <Typography.Text strong>{activity.summary}</Typography.Text>
-                        {activity.statusAfter && (
-                          <Tag color={statusColorMap[activity.statusAfter]}>{statusLabelMap[activity.statusAfter]}</Tag>
-                        )}
-                      </Space>
-                    }
-                    description={`${activity.actor} · ${new Date(activity.timestamp).toLocaleString()}`}
-                  />
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={12}>
-          <Card title="Health Insights">
-            <List
-              dataSource={[
-                {
-                  title: 'Follow-up Reminder',
-                  description: 'Four prospects have been idle for over 7 days. Reach out soon to improve conversion.',
-                },
-                {
-                  title: 'Expansion Opportunity',
-                  description: 'Atlas Logistics active usage grew 32%. Consider pitching an upgraded plan.',
-                },
-                {
-                  title: 'Renewal Alert',
-                  description: 'Two enterprise contracts expire within 30 days. Prepare renewal strategies.',
-                },
-              ]}
-              renderItem={item => (
-                <List.Item>
-                  <List.Item.Meta
-                    title={<Typography.Text strong>{item.title}</Typography.Text>}
-                    description={item.description}
-                  />
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-      </Row>
-    </Space>
+    </div>
   )
 }
 
 export default DashboardPage
-

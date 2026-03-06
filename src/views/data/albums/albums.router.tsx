@@ -1,5 +1,5 @@
 import { AdminRouterItem } from '../../router'
-import { DatabaseOutlined } from '@ant-design/icons'
+import { CustomerServiceOutlined } from '@ant-design/icons'
 import AlbumsPage from '.'
 
 const albumsRoutes: AdminRouterItem[] = [
@@ -10,7 +10,7 @@ const albumsRoutes: AdminRouterItem[] = [
       label: 'Albums',
       title: 'Albums Management',
       key: '/data/albums',
-      icon: <DatabaseOutlined />,
+      icon: <CustomerServiceOutlined />,
       order: 1,
     },
   },

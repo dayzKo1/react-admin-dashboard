@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Form, Input, Button, Card, message, Typography, Space, Divider, theme } from 'antd'
-import { UserOutlined, LockOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { UserOutlined, LockOutlined, ThunderboltOutlined, WeiboOutlined } from '@ant-design/icons'
 import { useNavigate, Link } from 'react-router-dom'
 import useUserStore from '../../../store/user'
 import { request } from '../../../utils/api'
@@ -76,6 +76,13 @@ const LoginPage: React.FC = () => {
       })
     }
   }, [form, mockEnabled])
+
+  const handleWeiboLogin = () => {
+    const backendUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+    const redirectUri = encodeURIComponent(window.location.origin + '/auth/weibo/callback')
+    const authUrl = `${backendUrl}/oauth2/authorization/weibo?redirect_uri=${redirectUri}`
+    window.location.href = authUrl
+  }
 
   const onFinish = async (values: LoginFormValues) => {
     setLoading(true)
@@ -211,6 +218,17 @@ const LoginPage: React.FC = () => {
               </Space>
             </>
           )}
+
+          <Divider plain>Or login with</Divider>
+
+          <Button
+            icon={<WeiboOutlined />}
+            onClick={handleWeiboLogin}
+            block
+            style={{ backgroundColor: '#E6162D', color: 'white', borderColor: '#E6162D' }}
+          >
+            Login with Weibo
+          </Button>
 
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <Text type="secondary">

@@ -1,5 +1,5 @@
 import { AdminRouterItem } from '../../router'
-import { AppstoreOutlined } from '@ant-design/icons'
+import { DatabaseOutlined } from '@ant-design/icons'
 
 const dataRoutes: AdminRouterItem[] = [
   {
@@ -8,7 +8,7 @@ const dataRoutes: AdminRouterItem[] = [
       label: 'Data Management',
       title: 'Data Management',
       key: '/data',
-      icon: <AppstoreOutlined />,
+      icon: <DatabaseOutlined />,
       order: 4,
     },
   },
